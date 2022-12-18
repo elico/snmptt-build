@@ -1,0 +1,32 @@
+#!/usr/bin/env bash/dilw
+
+#!/bin/bash -exu
+set -x
+set -e
+
+
+export BUILDZONE=${HOME}
+export DESTDIR="${BUILDZONE}/fakeroot"
+export PACKAGES_DEST="/srv/packages"
+
+export SPEC_FILE="snmptt.spec"
+
+cd ${BUILDZONE}
+sudo mkdir -p "${PACKAGES_DEST}"
+sudo chmod 777 "${PACKAGES_DEST}"
+
+mkdir -p ${BUILDZONE}/{BUILD,RPMS,SRPMS,SPECS,SOURCES}
+
+cd "${BUILDZONE}/SOURCES"
+/bin/sh convert-tar-gz-for-rpm.sh
+
+cp -v "/srv/SOURCES/"* "${BUILDZONE}/SOURCES/"
+cp -v "/srv/SPECS/"* "${BUILDZONE}/SPECS/"
+
+rpmbuild --define '_topdir '${BUILDZONE} --define "_smp_mflags -j${CPU_COUNT}" -ba -vv "${BUILDZONE}/SPECS/${SPEC_FILE}"
+
+cp -v "${BUILDZONE}/RPMS/"*"/"* "${PACKAGES_DEST}/"
+cp -v "${BUILDZONE}/SRPMS/"* "${PACKAGES_DEST}/"
+
+set +e
+set +x
